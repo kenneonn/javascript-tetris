@@ -2,14 +2,20 @@
 
 This project is a simple yet fully functional implementation of the classic Tetris game using pure `HTML`, `CSS`, and `JavaScript`, with no external libraries. It's designed to be lightweight and straightforward, suitable for beginners looking to understand game development with web technologies.
 
-## How to Play
+## Play Online
+
+You can play the game directly in your browser without downloading anything:
+
+**[Play Tetris Online](https://vontanne.github.io/javascript-tetris)**
+
+## How to Play Locally
 
 To play the game locally, follow these steps:
 
 1. Clone the repository or download the ZIP file.
 2. If downloaded as a ZIP, unzip the file.
 3. Navigate to the project directory.
-4. Double-click on `play.html` to open the game in your web browser.
+4. Double-click on `index.html` to open the game in your web browser.
 
 ### Game Controls
 
