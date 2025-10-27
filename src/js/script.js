@@ -326,14 +326,16 @@ class View {
     this.#element.appendChild(this.#canvas);
   }
 
-  renderMainScreen(state) {
+  renderMainScreen(state, highScore) {
     this.#clearScreen();
     this.#renderGameBoard(state);
-    this.#renderInfoPanel(state);
+    this.#renderInfoPanel(state, highScore);
   }
 
   renderStartScreen() {
-    this.#renderCenteredText("Press Enter to Start");
+    this.#clearScreen();
+    this.#renderCenteredText("                Press 1: Easy | 2: Medium | 3: Hard");
+    this.#renderCenteredText("  Press Enter to Start", this.#height / 2 + 40);
   }
 
   renderPauseScreen() {
@@ -341,7 +343,7 @@ class View {
     this.#renderCenteredText("Press Enter to Resume");
   }
 
-  renderEndScreen({ score }) {
+  renderEndScreen({ score }, highScore) {
     this.#clearScreen();
     
     const centerX = this.#width / 3;
@@ -355,7 +357,8 @@ class View {
     
     this.#context.fillText("GAME OVER", centerX, centerY - lineHeight);
     this.#context.fillText(`Score: ${score}`, centerX, centerY);
-    this.#context.fillText("Press Enter to Restart", centerX, centerY + lineHeight);
+    this.#context.fillText(`High Score: ${highScore}`, centerX, centerY + lineHeight);
+    this.#context.fillText("Press Enter to Restart", centerX, centerY + lineHeight * 2);
   }
 
   #initializeCanvas() {
@@ -400,12 +403,12 @@ class View {
     this.#context.fillRect(0, 0, this.#width, this.#height);
   }
 
-  #renderCenteredText(text) {
+  #renderCenteredText(text, y = this.#height / 2) {
     this.#context.fillStyle = View.#TEXT_COLOR;
     this.#context.font = `${View.#FONT_SIZE_LARGE}px ${View.#FONT_FAMILY}`;
     this.#context.textAlign = "center";
     this.#context.textBaseline = "middle";
-    this.#context.fillText(text, this.#width / 3, this.#height / 2);
+    this.#context.fillText(text, this.#width / 3, y);
   }
 
   #renderGameBoard({ playfield }) {
@@ -434,7 +437,7 @@ class View {
     this.#context.strokeRect(0, 0, this.#boardArea.width, this.#boardArea.height);
   }
 
-  #renderInfoPanel({ level, score, lines, nextPiece }) {
+  #renderInfoPanel({ level, score, lines, nextPiece }, highScore) {
     this.#context.textAlign = "start";
     this.#context.textBaseline = "top";
     this.#context.fillStyle = View.#TEXT_COLOR;
@@ -444,7 +447,8 @@ class View {
       { text: `Score: ${score}`, y: 0 },
       { text: `Lines: ${lines}`, y: View.#LINE_SPACING },
       { text: `Level: ${level}`, y: View.#LINE_SPACING * 2 },
-      { text: "Next:", y: View.#LINE_SPACING * 4 },
+      { text: `High: ${highScore}`, y: View.#LINE_SPACING * 3 },
+      { text: "Next:", y: View.#LINE_SPACING * 5 },
     ];
 
     labels.forEach(({ text, y }) => {
@@ -456,7 +460,7 @@ class View {
 
   #renderNextTetromino(tetromino) {
     const scale = 0.5;
-    const offsetY = 100;
+    const offsetY = 120;
 
     for (let row = 0; row < tetromino.blocks.length; row++) {
       for (let col = 0; col < tetromino.blocks[row].length; col++) {
@@ -493,6 +497,9 @@ class Controller {
     UP_ARROW: 38,
     RIGHT_ARROW: 39,
     DOWN_ARROW: 40,
+    ONE: 49,
+    TWO: 50,
+    THREE: 51,
   };
 
   static #INITIAL_SPEED = 1000;
@@ -503,11 +510,14 @@ class Controller {
   #view;
   #dropTimerId = null;
   #isPlaying = false;
+  #difficulty = "medium";
+  #highScore = 0;
 
   constructor(game, view) {
     this.#game = game;
     this.#view = view;
-    
+
+    this.#loadHighScore();
     this.#initializeEventListeners();
     this.#view.renderStartScreen();
   }
@@ -516,118 +526,165 @@ class Controller {
     return this.#isPlaying;
   }
 
-  #initializeEventListeners() {
-    document.addEventListener("keydown", this.#handleKeyDown.bind(this));
-    document.addEventListener("keyup", this.#handleKeyUp.bind(this));
+    #initializeEventListeners() {
+    document.addEventListener("keydown", (event) => {
+      switch (event.keyCode) {
+        case Controller.#KEY_CODES.ENTER:
+          if (this.#isPlaying) {
+            this.#pause();
+          } else if (this.#game.isGameOver) {
+            this.#restart();
+          } else {
+            this.#start();
+          }
+          break;
+
+        case Controller.#KEY_CODES.ONE:
+          this.#difficulty = "easy";
+          this.#view.renderCenteredText("Difficulty: Easy");
+          break;
+
+        case Controller.#KEY_CODES.TWO:
+          this.#difficulty = "medium";
+          this.#view.renderCenteredText("Difficulty: Medium");
+          break;
+
+        case Controller.#KEY_CODES.THREE:
+          this.#difficulty = "hard";
+          this.#view.renderCenteredText("Difficulty: Hard");
+          break;
+
+        case Controller.#KEY_CODES.LEFT_ARROW:
+          if (this.#isPlaying) {
+            this.#game.moveTetrominoLeft();
+            this.#updateView();
+          }
+          break;
+
+        case Controller.#KEY_CODES.RIGHT_ARROW:
+          if (this.#isPlaying) {
+            this.#game.moveTetrominoRight();
+            this.#updateView();
+          }
+          break;
+
+        case Controller.#KEY_CODES.DOWN_ARROW:
+          if (this.#isPlaying) {
+            this.#game.moveTetrominoDown();
+            this.#updateView();
+          }
+          break;
+
+        case Controller.#KEY_CODES.UP_ARROW:
+          if (this.#isPlaying) {
+            this.#game.rotateTetromino();
+            this.#updateView();
+          }
+          break;
+
+        case Controller.#KEY_CODES.SPACE:
+          if (this.#isPlaying) {
+            while (!this.#game.isGameOver) {
+              const before = this.#game.getState().playfield;
+              this.#game.moveTetrominoDown();
+              const after = this.#game.getState().playfield;
+              if (JSON.stringify(before) === JSON.stringify(after)) break;
+            }
+            this.#updateView();
+          }
+          break;
+      }
+    });
   }
 
-  #update() {
-    this.#game.moveTetrominoDown();
-    this.#updateView();
-  }
+  #start() {
+    if (this.#isPlaying) return;
 
-  #play() {
     this.#isPlaying = true;
-    this.#startDropTimer();
+    this.#setGameSpeed();
     this.#updateView();
+    this.#dropLoop();
   }
 
   #pause() {
+    if (!this.#isPlaying) return;
+
     this.#isPlaying = false;
-    this.#stopDropTimer();
-    this.#updateView();
+    clearTimeout(this.#dropTimerId);
+    this.#view.renderPauseScreen();
   }
 
-  #reset() {
+  #restart() {
     this.#game.reset();
-    this.#play();
+    this.#isPlaying = false;
+    this.#view.renderStartScreen();
   }
 
-  #updateView() {
-    const gameState = this.#game.getState();
+  #dropLoop() {
+    if (!this.#isPlaying) return;
 
-    if (gameState.isGameOver) {
-      this.#view.renderEndScreen(gameState);
-    } else if (!this.#isPlaying) {
-      this.#view.renderPauseScreen();
-    } else {
-      this.#view.renderMainScreen(gameState);
+    this.#game.moveTetrominoDown();
+    this.#updateView();
+
+    if (this.#game.isGameOver) {
+      this.#endGame();
+      return;
     }
+
+    const speed = this.#calculateSpeed();
+    this.#dropTimerId = setTimeout(() => this.#dropLoop(), speed);
   }
 
-  #calculateDropSpeed() {
-    const currentLevel = this.#game.getState().level;
-    const speed = Controller.#INITIAL_SPEED - currentLevel * Controller.#SPEED_DECREASE_PER_LEVEL;
+  #calculateSpeed() {
+    const baseSpeed = Controller.#INITIAL_SPEED;
+    const decrease = this.#game.level * Controller.#SPEED_DECREASE_PER_LEVEL;
+
+    let speed = baseSpeed - decrease;
+    if (this.#difficulty === "easy") speed *= 1.2;
+    if (this.#difficulty === "hard") speed *= 0.7;
+
     return Math.max(speed, Controller.#MINIMUM_SPEED);
   }
 
-  #startDropTimer() {
-    if (!this.#dropTimerId) {
-      const dropSpeed = this.#calculateDropSpeed();
-      this.#dropTimerId = setInterval(() => this.#update(), dropSpeed);
-    }
+  #setGameSpeed() {
+    clearTimeout(this.#dropTimerId);
+    this.#dropTimerId = setTimeout(() => this.#dropLoop(), this.#calculateSpeed());
   }
 
-  #stopDropTimer() {
-    if (this.#dropTimerId) {
-      clearInterval(this.#dropTimerId);
-      this.#dropTimerId = null;
-    }
+  #updateView() {
+    const state = this.#game.getState();
+    this.#view.renderMainScreen(state, this.#highScore);
   }
 
-  #handleKeyDown(event) {
-    const gameState = this.#game.getState();
-    
-    switch (event.keyCode) {
-      case Controller.#KEY_CODES.SPACE:
-      case Controller.#KEY_CODES.ENTER:
-        this.#handlePauseOrRestart(gameState);
-        break;
-      case Controller.#KEY_CODES.LEFT_ARROW:
-        if (this.#isPlaying && !gameState.isGameOver) {
-          this.#game.moveTetrominoLeft();
-          this.#updateView();
-        }
-        break;
-      case Controller.#KEY_CODES.UP_ARROW:
-        if (this.#isPlaying && !gameState.isGameOver) {
-          this.#game.rotateTetromino();
-          this.#updateView();
-        }
-        break;
-      case Controller.#KEY_CODES.RIGHT_ARROW:
-        if (this.#isPlaying && !gameState.isGameOver) {
-          this.#game.moveTetrominoRight();
-          this.#updateView();
-        }
-        break;
-      case Controller.#KEY_CODES.DOWN_ARROW:
-        if (this.#isPlaying && !gameState.isGameOver) {
-          this.#stopDropTimer();
-          this.#game.moveTetrominoDown();
-          this.#updateView();
-        }
-        break;
+  #endGame() {
+    this.#isPlaying = false;
+    clearTimeout(this.#dropTimerId);
+
+    const state = this.#game.getState();
+    if (state.score > this.#highScore) {
+      this.#highScore = state.score;
+      this.#saveHighScore();
     }
+
+    this.#view.renderEndScreen(state, this.#highScore);
   }
 
-  #handleKeyUp(event) {
-    if (event.keyCode === Controller.#KEY_CODES.DOWN_ARROW && this.#isPlaying) {
-      this.#startDropTimer();
-    }
+  #saveHighScore() {
+    localStorage.setItem("tetrisHighScore", this.#highScore);
   }
 
-  #handlePauseOrRestart(gameState) {
-    if (gameState.isGameOver) {
-      this.#reset();
-    } else if (this.#isPlaying) {
-      this.#pause();
-    } else {
-      this.#play();
+  #loadHighScore() {
+    const saved = localStorage.getItem("tetrisHighScore");
+    if (saved) {
+      this.#highScore = parseInt(saved, 10);
     }
   }
 }
 
-const game = new Game();
-const view = new View(root, 480, 640, 20, 10);
-const controller = new Controller(game, view);
+document.addEventListener("DOMContentLoaded", () => {
+  const root = document.getElementById("root");
+  const game = new Game();
+  const view = new View(root, 480, 640, 20, 10);
+  const controller = new Controller(game, view);
+  window.tetris = { game, view, controller };
+});
