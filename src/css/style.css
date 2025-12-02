@@ -22,13 +22,15 @@ body {
     text-align: center;
 }
 
-#root>h1 {
-    margin: 0 10% 0 0;
-    padding: var(--title-padding) 0;
-    color: var(--text-color);
+#root > h1 {
+  margin: 20px 0;
+  padding: var(--title-padding) 0;
+  color: var(--text-color);
 }
 
-#root>canvas {
-    display: block;
-    margin: var(--canvas-margin) auto;
+#root > canvas {
+  display: block;
+  margin: 20px auto;
+  border: 2px solid #fff;
+  background-color: #111;
 }
